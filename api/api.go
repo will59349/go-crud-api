@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type User struct {
@@ -103,6 +104,60 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func DynamicUpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var existingUser User
+	err = DB.QueryRow("SELECT name, email, age FROM users WHERE id = ?", id).Scan(&existingUser.Name, &existingUser.Email)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	query := "UPDATE users SET "
+	var updates []string
+	var args []interface{}
+
+	if user.Name != "" {
+		updates = append(updates, "name = ?")
+		args = append(args, user.Name)
+	} else {
+		updates = append(updates, "name = ?")
+		args = append(args, existingUser.Name)
+	}
+
+	if user.Email != "" {
+		updates = append(updates, "email = ?")
+		args = append(args, user.Email)
+	} else {
+		updates = append(updates, "email = ?")
+		args = append(args, existingUser.Email)
+	}
+
+	if len(updates) == 0 {
+		http.Error(w, "No fields to update", http.StatusBadRequest)
+		return
+	}
+
+	query += strings.Join(updates, ", ") + " WHERE id = ?"
+	args = append(args, id)
+
+	_, err = DB.Exec(query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {

@@ -16,6 +16,7 @@ func main() {
 	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.GetUserHandler).Methods("GET")
 	r.HandleFunc("/users", go_crud_api.CreateUserHandler).Methods("POST")
 	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.UpdateUserHandler).Methods("PUT")
+	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.DynamicUpdateUserHandler).Methods("PUT")
 	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.DeleteUserHandler).Methods("DELETE")
 
 	log.Println("Server is running on port 8080")
