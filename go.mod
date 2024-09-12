@@ -1,4 +1,4 @@
-module github.com/will59349/connect-mysql
+module github.com/will59349/go-crud-api
 
 go 1.22.6
 

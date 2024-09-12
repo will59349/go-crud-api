@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"database/sql"
@@ -20,7 +20,7 @@ type User struct {
 
 var DB *sql.DB
 
-func initDB() {
+func InitDB() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Can't find .env file")
@@ -132,18 +132,4 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func main() {
-	initDB()
-
-	r := mux.NewRouter()
-	r.HandleFunc("/users", GetUsersHandler).Methods("GET")
-	r.HandleFunc("/users/{id:[0-9]+}", GetUserHandler).Methods("GET")
-	r.HandleFunc("/users", CreateUserHandler).Methods("POST")
-	r.HandleFunc("/users/{id:[0-9]+}", UpdateUserHandler).Methods("PUT")
-	r.HandleFunc("/users/{id:[0-9]+}", DeleteUserHandler).Methods("DELETE")
-
-	log.Println("Server is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
 }
