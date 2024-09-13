@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/will59349/go-crud-api/handler"
 	"github.com/will59349/go-crud-api/pkg/database"
 	"log"
 	"os"
-
-	_ "github.com/jmoiron/sqlx"
 )
 
 func InitDB() {
-	err := godotenv.Load(".env")
+	err := godotenv.Load("./config/.env.default")
 	if err != nil {
 		log.Fatal("Can't find .env file")
 	}
