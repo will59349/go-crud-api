@@ -1,24 +1,53 @@
 package main
 
 import (
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
-	go_crud_api "github.com/will59349/go-crud-api/api"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/will59349/go-crud-api/handler"
+	"github.com/will59349/go-crud-api/pkg/database"
 	"log"
-	"net/http"
+	"os"
+
+	_ "github.com/jmoiron/sqlx"
 )
 
+func InitDB() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Can't find .env file")
+	}
+
+	host := os.Getenv("MYSQL_HOST")
+	user := os.Getenv("MYSQL_USER")
+	password := os.Getenv("MYSQL_PASSWORD")
+	dbname := os.Getenv("MYSQL_DB")
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", user, password, host, dbname)
+
+	database.DB, err = database.ConnectDB(dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Successfully connected to MySQL!")
+}
+
 func main() {
-	go_crud_api.InitDB()
+	// Initialize database
+	InitDB()
 
-	r := mux.NewRouter()
-	r.HandleFunc("/users", go_crud_api.GetUsersHandler).Methods("GET")
-	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.GetUserHandler).Methods("GET")
-	r.HandleFunc("/users", go_crud_api.CreateUserHandler).Methods("POST")
-	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.UpdateUserHandler).Methods("PUT")
-	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.DynamicUpdateUserHandler).Methods("PUT")
-	r.HandleFunc("/users/{id:[0-9]+}", go_crud_api.DeleteUserHandler).Methods("DELETE")
+	// Initialize Gin router
+	r := gin.Default()
 
-	log.Println("Server is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	// Define routes
+	r.GET("/users", handler.GetUsersHandler)
+	r.GET("/users/:id", handler.GetUserHandler)
+	r.POST("/users", handler.CreateUserHandler)
+	r.PUT("/users/:id", handler.UpdateUserHandler)
+	r.DELETE("/users/:id", handler.DeleteUserHandler)
+	r.PATCH("/users/:id", handler.DynamicUpdateUserHandler)
+
+	// Start the server
+	r.Run(":8080")
 }
